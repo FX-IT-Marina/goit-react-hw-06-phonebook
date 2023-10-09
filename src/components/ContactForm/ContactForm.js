@@ -1,9 +1,11 @@
-import PropTypes from 'prop-types';
 import { Formik, ErrorMessage } from 'formik';
 import { object, string } from 'yup';
 
 import React from 'react';
 import { Error, StyledForm, Button, Label, Input } from './ContactForm.styled';
+import { addContact } from 'redux/contactSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { getContacts } from 'redux/contactSlice';
 
 const FormError = ({ name }) => {
   return (
@@ -11,19 +13,28 @@ const FormError = ({ name }) => {
   );
 };
 
-export const ContactForm = ({ onSubmit }) => {
-  const userSchema = object({
-    name: string().required(),
-    number: string().required(),
-  });
+export const ContactForm = () => {
+  const dispatch = useDispatch();
+  const contacts = useSelector(getContacts);
 
   const initialValues = {
     name: '',
     number: '',
   };
 
+  const userSchema = object({
+    name: string().required(),
+    number: string().required(),
+  });
+
   const handleSubmit = (values, { resetForm }) => {
-    onSubmit(values);
+    const duplicate = contacts.some(
+      ({ name }) => name.toLowerCase() === values.name.toLowerCase()
+    );
+    if (duplicate) {
+      return alert(`${values.name} is already in contacts`);
+    }
+    dispatch(addContact(values));
     resetForm();
   };
 
@@ -48,8 +59,4 @@ export const ContactForm = ({ onSubmit }) => {
       </StyledForm>
     </Formik>
   );
-};
-
-ContactForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
 };
